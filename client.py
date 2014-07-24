@@ -1,14 +1,18 @@
 from flask import Flask, url_for, session, request, jsonify
 from flask_oauthlib.client import OAuth
 
+import os
 
-CLIENT_ID = 'GbRmKgbSMmlE2NlugMeFfQIba8hoVyBFsWS8Igsq'
-CLIENT_SECRET = 'BfP7jsN8dSsXjGLfTTPiEvarMJOpkZQ2Y7IVVee8X929LfolMV'
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
 
 
 app = Flask(__name__)
 app.debug = True
-app.secret_key = 'secret'
+app.secret_key = 'secret1'
+app.config.update({
+    'SESSION_COOKIE_NAME': 'client',
+})
 oauth = OAuth(app)
 
 remote = oauth.remote_app(
@@ -29,6 +33,7 @@ def index():
         resp = remote.get('me')
         print session
         return jsonify(resp.data)
+    print "No auth token"
     next_url = request.args.get('next') or request.referrer or None
     return remote.authorize(
         callback=url_for('authorized', next=next_url, _external=True)
@@ -55,6 +60,6 @@ def get_oauth_token():
 
 if __name__ == '__main__':
     import os
-    os.environ['DEBUG'] = 'true'
+    #os.environ['DEBUG'] = 'true'
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
     app.run(host='127.0.0.1', port=8000)

@@ -14,6 +14,7 @@ app.debug = True
 app.secret_key = 'secret'
 app.config.update({
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///db.sqlite',
+    'SESSION_COOKIE_NAME': 'app',
 })
 db = SQLAlchemy(app)
 oauth = OAuth2Provider(app)
@@ -156,8 +157,7 @@ def client():
     db.session.add(item)
     db.session.commit()
     return Response('''\
-CLIENT_ID="{}"
-CLIENT_SECRET="{}"
+CLIENT_ID="{}" CLIENT_SECRET="{}"
 '''.format(
             item.client_id,
             item.client_secret,
@@ -251,6 +251,10 @@ def authorize(*args, **kwargs):
     confirm = request.form.get('confirm', 'no')
     return confirm == 'yes'
 
+@app.route('/api/valid_token/<access_token>')
+def valid_token(access_token):
+    valid = Token.query.filter_by(access_token=access_token).first() and 'yes' or 'no'
+    return Response(valid, mimetype='text/plain')
 
 @app.route('/api/me')
 @oauth.require_oauth()

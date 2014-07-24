@@ -5,7 +5,10 @@ import os
 
 app = Flask(__name__)
 app.debug = True
-app.secret_key = 'secret'
+app.secret_key = 'secret2'
+app.config.update({
+    'SESSION_COOKIE_NAME': 'client2',
+})
 
 from client import CLIENT_ID, CLIENT_SECRET
 
