@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from datetime import datetime, timedelta
-from flask import Flask
+from flask import Flask, Response
 from flask import session, request
 from flask import render_template, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -117,6 +117,7 @@ class Token(db.Model):
 
 
 def current_user():
+    print "Current user: ", session
     if 'id' in session:
         uid = session['id']
         return User.query.get(uid)
@@ -147,20 +148,22 @@ def client():
         client_id=gen_salt(40),
         client_secret=gen_salt(50),
         _redirect_uris=' '.join([
-            'http://localhost:8000/authorized',
             'http://127.0.0.1:8000/authorized',
-            'http://127.0.1:8000/authorized',
-            'http://127.1:8000/authorized',
-            ]),
+        ]),
         _default_scopes='email',
         user_id=user.id,
     )
     db.session.add(item)
     db.session.commit()
-    return jsonify(
-        client_id=item.client_id,
-        client_secret=item.client_secret,
-    )
+    return Response('''\
+CLIENT_ID="{}"
+CLIENT_SECRET="{}"
+'''.format(
+            item.client_id,
+            item.client_secret,
+        ),
+        mimetype='text/plain'
+   )
 
 
 @oauth.clientgetter
@@ -236,6 +239,7 @@ def access_token():
 def authorize(*args, **kwargs):
     user = current_user()
     if not user:
+        print "No user"
         return redirect('/')
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
@@ -251,10 +255,18 @@ def authorize(*args, **kwargs):
 @app.route('/api/me')
 @oauth.require_oauth()
 def me():
+    print request
+    print request.headers
+    print session
     user = request.oauth.user
     return jsonify(username=user.username)
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    import os
+    os.environ['DEBUG'] = 'true'
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
     db.create_all()
     app.run()

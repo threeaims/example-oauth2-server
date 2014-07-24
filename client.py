@@ -27,6 +27,7 @@ remote = oauth.remote_app(
 def index():
     if 'remote_oauth' in session:
         resp = remote.get('me')
+        print session
         return jsonify(resp.data)
     next_url = request.args.get('next') or request.referrer or None
     return remote.authorize(
@@ -56,4 +57,4 @@ if __name__ == '__main__':
     import os
     os.environ['DEBUG'] = 'true'
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
-    app.run(host='localhost', port=8000)
+    app.run(host='127.0.0.1', port=8000)
